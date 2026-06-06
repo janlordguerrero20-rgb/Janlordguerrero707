@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mines Prediction Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-dark: #1a0f2b;
+            --tile-bg-dark: rgba(255, 255, 255, 0.05);
+            --tile-border-dark: rgba(255, 255, 255, 0.1);
+            --safe-glow-dark: #00ff00;
+            --unsafe-glow-dark: #ff0000;
+            --text-color-dark: #e0e0e0;
+            --header-color-dark: #9f4cfd;
+            --button-bg-dark: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --button-hover-dark: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+            --glass-blur: blur(10px);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+            --bg-color-light: #f0f2f5;
+            --tile-bg-light: rgba(255, 255, 255, 0.7);
+            --tile-border-light: rgba(0, 0, 0, 0.1);
+            --safe-glow-light: #008000;
+            --unsafe-glow-light: #cc0000;
+            --text-color-light: #333;
+            --header-color-light: #4a90e2;
+            --button-bg-light: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            --button-hover-light: linear-gradient(135deg, #c2e9fb 0%, #a1c4fd 100%);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-color-dark);
+            background: var(--bg-color-dark);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background 0.5s ease, color 0.5s ease;
+            background-image: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body.light-mode {
+            color: var(--text-color-light);
+            background: var(--bg-color-light);
+            background-image: linear-gradient(45deg, #d3dce3, #e8edf3, #f5f7fa);
+        }
+
+        .container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8em;
+            color: var(--header-color-dark);
+            text-shadow: 0 0 15px rgba(159, 76, 253, 0.7);
+            margin-bottom: 10px;
+            transition: color 0.5s ease;
+        }
+        body.light-mode h1 {
+            color: var(--header-color-light);
+            text-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+        }
+
+        .platform-display {
+            font-size: 1.2em;
+            margin-top: 10px;
+            color: var(--text-color-dark);
+            transition: color 0.5s ease;
+        }
+        body.light-mode .platform-display {
+            color: var(--text-color-light);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+            background: var(--tile-bg-dark);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 15px;
+            border: 1px solid var(--tile-border-dark);
+            box-shadow: var(--glass-shadow);
+            padding: 25px;
+            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+        body.light-mode .controls {
+            background: var(--tile-bg-light);
+            border: 1px solid var(--tile-border-light);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--text-color-dark);
+            transition: color 0.5s ease;
+        }
+        body.light-mode label {
+            color: var(--text-color-light);
+        }
+
+        select, input[type="text"] {
+            padding: 12px 15px;
+            border: 1px solid var(--tile-border-dark);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color-dark);
+            font-size: 1em;
+            width: 220px;
+            max-width: 100%;
+            box-sizing: border-box;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        body.light-mode select, body.light-mode input[type="text"] {
+            border: 1px solid var(--tile-border-light);
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text-color-light);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+        }
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--header-color-dark);
+            box-shadow: 0 0 0 2px rgba(159, 76, 253, 0.5);
+        }
+        body.light-mode select:focus, body.light-mode input[type="text"]:focus {
+            border-color: var(--header-color-light);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.5);
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            background: var(--button-bg-dark);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        body.light-mode button {
+            background: var(--button-bg-light);
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: var(--button-hover-dark);
+            border-radius: 50%;
+            transition: all 0.4s ease-out;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: -1;
+        }
+        body.light-mode button::before {
+            background: var(--button-hover-light);
+        }
+        button:hover::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 80px); /* Adjust tile size here */
+            grid-template-rows: repeat(5, 80px); /* Adjust tile size here */
+            gap: 15px;
+            background: var(--tile-bg-dark);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 20px;
+            border: 1px solid var(--tile-border-dark);
+            box-shadow: var(--glass-shadow);
+            padding: 25px;
+            margin-top: 30px;
+            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+            position: relative;
+        }
+        body.light-mode .grid-container {
+            background: var(--tile-bg-light);
+            border: 1px solid var(--tile-border-light);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+        .grid-container::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 22px;
+            padding: 2px;
+            background: linear-gradient(45deg, #00ffc8, #6a11cb);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: -1;
+            opacity: 0.3;
+            animation: border-glow 4s infinite alternate;
+        }
+        body.light-mode .grid-container::before {
+            background: linear-gradient(45deg, #a1c4fd, #c2e9fb);
+            opacity: 0.5;
+        }
+        @keyframes border-glow {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.6; }
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--tile-bg-dark);
+            border: 1px solid var(--tile-border-dark);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 2em;
+            color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        body.light-mode .tile {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--tile-border-light);
+            color: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .tile::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            border-color: var(--header-color-dark);
+            color: var(--text-color-dark);
+        }
+        body.light-mode .tile:hover {
+            border-color: var(--header-color-light);
+            color: var(--text-color-light);
+        }
+        .tile.revealed {
+            animation: pop-in 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            color: white; /* Default for revealed icons */
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .tile.safe {
+            background: rgba(0, 255, 0, 0.1);
+            box-shadow: 0 0 15px var(--safe-glow-dark), inset 0 0 10px var(--safe-glow-dark);
+            border-color: var(--safe-glow-dark);
+            color: #00ff00;
+            animation: safe-glow-anim 2s infinite alternate, pop-in 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        body.light-mode .tile.safe {
+            background: rgba(0, 128, 0, 0.1);
+            box-shadow: 0 0 15px var(--safe-glow-light), inset 0 0 10px var(--safe-glow-light);
+            border-color: var(--safe-glow-light);
+            color: #008000;
+        }
+        @keyframes safe-glow-anim {
+            0% { text-shadow: 0 0 5px #00ff00; box-shadow: 0 0 15px var(--safe-glow-dark), inset 0 0 10px var(--safe-glow-dark); }
+            100% { text-shadow: 0 0 15px #00ff00; box-shadow: 0 0 25px var(--safe-glow-dark), inset 0 0 15px var(--safe-glow-dark); }
+        }
+        body.light-mode .tile.safe @keyframes safe-glow-anim {
+            0% { text-shadow: 0 0 5px #008000; box-shadow: 0 0 15px var(--safe-glow-light), inset 0 0 10px var(--safe-glow-light); }
+            100% { text-shadow: 0 0 15px #008000; box-shadow: 0 0 25px var(--safe-glow-light), inset 0 0 15px var(--safe-glow-light); }
+        }
+
+
+        .tile.unsafe {
+            background: rgba(255, 0, 0, 0.1);
+            box-shadow: 0 0 15px var(--unsafe-glow-dark), inset 0 0 10px var(--unsafe-glow-dark);
+            border-color: var(--unsafe-glow-dark);
+            color: #ff0000;
+            animation: pop-in 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+        }
+        body.light-mode .tile.unsafe {
+            background: rgba(204, 0, 0, 0.1);
+            box-shadow: 0 0 15px var(--unsafe-glow-light), inset 0 0 10px var(--unsafe-glow-light);
+            border-color: var(--unsafe-glow-light);
+            color: #cc0000;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .social-button {
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .social-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: rgba(255, 255, 255, 0.15); /* Light overlay for hover */
+            border-radius: 50%;
+            transition: all 0.4s ease-out;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: -1;
+        }
+        .social-button:hover::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .social-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .telegram {
+            background: linear-gradient(135deg, #0088cc 0%, #00aaff 100%);
+        }
+        .youtube {
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+        }
+
+        .social-button i {
+            font-size: 1.3em;
+        }
+
+        .mode-toggle {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: var(--tile-bg-dark);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 50px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: var(--glass-shadow);
+            border: 1px solid var(--tile-border-dark);
+            transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+        body.light-mode .mode-toggle {
+            background: var(--tile-bg-light);
+            border: 1px solid var(--tile-border-light);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .mode-toggle .toggle-icon {
+            font-size: 1.5em;
+            padding: 8px 12px;
+            border-radius: 50%;
+            color: var(--text-color-dark);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.light-mode .mode-toggle .toggle-icon {
+            color: var(--text-color-light);
+        }
+
+        .mode-toggle .toggle-icon.active {
+            background: var(--button-bg-dark);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        body.light-mode .mode-toggle .toggle-icon.active {
+            background: var(--button-bg-light);
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+
+        footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+            transition: color 0.5s ease;
+        }
+        body.light-mode footer {
+            color: rgba(0, 0, 0, 0.5);
+        }
+        footer span {
+            color: var(--header-color-dark);
+            font-weight: bold;
+            transition: color 0.5s ease;
+        }
+        body.light-mode footer span {
+            color: var(--header-color-light);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            .controls {
+                flex-direction: column;
+                padding: 15px;
+            }
+            .control-group {
+                width: 100%;
+            }
+            select, input[type="text"] {
+                width: 100%;
+            }
+            .grid-container {
+                grid-template-columns: repeat(5, 55px); /* Smaller tiles for mobile */
+                grid-template-rows: repeat(5, 55px);
+                gap: 10px;
+                padding: 15px;
+            }
+            .tile {
+                font-size: 1.5em;
+            }
+            .social-buttons {
+                flex-direction: column;
+                width: 80%;
+            }
+            .social-button {
+                width: 100%;
+                justify-content: center;
+            }
+            .mode-toggle {
+                top: 15px;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            .grid-container {
+                grid-template-columns: repeat(5, 45px); /* Even smaller tiles */
+                grid-template-rows: repeat(5, 45px);
+                gap: 8px;
+                padding: 10px;
+            }
+            .tile {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="mode-toggle" id="modeToggle">
+                <span class="toggle-icon fas fa-sun" id="lightModeIcon"></span>
+                <span class="toggle-icon fas fa-moon active" id="darkModeIcon"></span>
+            </div>
+            <h1>Mines Prediction Tool</h1>
+            <p class="platform-display">Platform: <span id="selectedPlatform">Stake</span></p>
+        </header>
+
+        <section class="controls">
+            <div class="control-group">
+                <label for="platformSelector">Select Platform:</label>
+                <select id="platformSelector">
+                    <option value="Stake">Stake</option>
+                    <option value="1win">1win</option>
+                    <option value="Tashan Win">Tashan Win</option>
+                    <option value="Bet365">Bet365</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="seedInput">Enter Your Seeds:</label>
+                <input type="text" id="seedInput" placeholder="e.g., your_unique_seed_123">
+            </div>
+
+            <button id="predictButton">Predict Safe Mines</button>
+            <button id="resetButton">Reset Game</button>
+        </section>
+
+        <section class="grid-container" id="minesGrid"></section>
+
+        <section class="social-buttons">
+            <a href="https://t.me/+BaheW_4R0ohiODNl" target="_blank" class="social-button telegram">
+                <i class="fab fa-telegram-plane"></i> Join Telegram
+            </a>
+            <a href="https://youtube.com/@funmodz786?si=Ns2TdJaDKAuu8Ehi" target="_blank" class="social-button youtube">
+                <i class="fab fa-youtube"></i> Join YouTube
+            </a>
+        </section>
+    </div>
+
+    <footer>
+        <p>⚡ Created by <span>Fun Education</span></p>
+    </footer>
+
+    <script>
+        const platformSelector = document.getElementById('platformSelector');
+        const selectedPlatform = document.getElementById('selectedPlatform');
+        const seedInput = document.getElementById('seedInput');
+        const predictButton = document.getElementById('predictButton');
+        const resetButton = document.getElementById('resetButton');
+        const minesGrid = document.getElementById('minesGrid');
+        const modeToggle = document.getElementById('modeToggle');
+        const lightModeIcon = document.getElementById('lightModeIcon');
+        const darkModeIcon = document.getElementById('darkModeIcon');
+
+        const NUM_TILES = 25;
+        const NUM_SAFE_MINES = 5;
+        const NUM_UNSAFE_MINES = 20;
+
+        let currentGrid = []; // Stores the current state of the grid (0 for unsafe, 1 for safe)
+        let revealedTiles = new Set(); // To keep track of revealed tiles for reset
+
+        // Function to generate a seeded pseudo-random number
+        function mulberry32(seed) {
+            return function() {
+                seed |= 0;
+                seed = (seed + 0x6D2B79F5) | 0;
+                let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+                t = (t + Math.imul(t ^ (t >>> 13), 1 | t)) | 0;
+                return ((t >>> 24) / 0x100000000);
+            };
+        }
+
+        // Initialize grid display
+        function createGrid() {
+            minesGrid.innerHTML = '';
+            for (let i = 0; i < NUM_TILES; i++) {
+                const tile = document.createElement('div');
+                tile.classList.add('tile');
+                tile.dataset.index = i;
+                minesGrid.appendChild(tile);
+            }
+        }
+
+        function generateMines(seed) {
+            const tiles = Array.from({ length: NUM_TILES }, (_, i) => i);
+            const rng = mulberry32(seed);
+
+            // Fisher-Yates shuffle using the seeded RNG
+            for (let i = tiles.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+            }
+
+            // The first NUM_SAFE_MINES indices in the shuffled array are safe
+            const safeIndices = new Set(tiles.slice(0, NUM_SAFE_MINES));
+
+            currentGrid = Array(NUM_TILES).fill(0); // 0 for unsafe (bomb)
+            safeIndices.forEach(index => {
+                currentGrid[index] = 1; // 1 for safe (diamond)
+            });
+        }
+
+        function predictSafeMines() {
+            resetGame(false); // Clear previous highlights without clearing seed input
+
+            const seed = seedInput.value.trim();
+            let numericSeed;
+
+            if (seed) {
+                // Simple hash for string seeds
+                numericSeed = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            } else {
+                // If no seed, use current timestamp for randomness
+                numericSeed = Date.now();
+            }
+
+            generateMines(numericSeed);
+
+            const tiles = minesGrid.children;
+            currentGrid.forEach((isSafe, index) => {
+                const tile = tiles[index];
+                tile.classList.add('revealed');
+                revealedTiles.add(tile); // Add to revealed set for reset
+
+                if (isSafe) {
+                    tile.classList.add('safe');
+                    tile.innerHTML = '💎';
+                } else {
+                    tile.classList.add('unsafe');
+                    tile.innerHTML = '💣';
+                }
+            });
+        }
+
+        function resetGame(clearSeed = true) {
+            revealedTiles.forEach(tile => {
+                tile.classList.remove('safe', 'unsafe', 'revealed');
+                tile.innerHTML = '';
+            });
+            revealedTiles.clear();
+            currentGrid = [];
+            if (clearSeed) {
+                seedInput.value = '';
+            }
+        }
+
+        // Event Listeners
+        platformSelector.addEventListener('change', (event) => {
+            selectedPlatform.textContent = event.target.value;
+        });
+
+        predictButton.addEventListener('click', predictSafeMines);
+        resetButton.addEventListener('click', () => resetGame(true));
+
+        modeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            lightModeIcon.classList.toggle('active');
+            darkModeIcon.classList.toggle('active');
+
+            // Save preference to localStorage
+            if (document.body.classList.contains('light-mode')) {
+                localStorage.setItem('theme', 'light');
+            } else {
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            createGrid();
+            // Load theme from localStorage
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                lightModeIcon.classList.add('active');
+                darkModeIcon.classList.remove('active');
+            } else {
+                // Default to dark mode
+                document.body.classList.remove('light-mode');
+                darkModeIcon.classList.add('active');
+                lightModeIcon.classList.remove('active');
+            }
+        });
+
+    </script>
+</body>
+</html>
